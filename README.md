@@ -43,7 +43,7 @@ Defaults: `eps_a=1e-6`, `eps_w=1e-12`, `promote=+0.05`, `demote=-0.05`, `slope_7
 
 - **CLI (PY):** [Preview](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/blob/main/ssm_audit_mini_calc.py) • [Download](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/raw/main/ssm_audit_mini_calc.py)
 
-- **Windows launcher (CMD):** [Preview](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/blob/main/scripts/run_csv.cmd) • [Download](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/raw/main/scripts/run_csv.cmd)
+- **Windows launcher (CMD):** [Preview](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/blob/main/run_csv.cmd) • [Download](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/raw/main/run_csv.cmd)
 
 - **Sample output (CSV):** [Preview](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/blob/main/mini_calc_output.csv) • [Download](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/raw/main/mini_calc_output.csv)
 
