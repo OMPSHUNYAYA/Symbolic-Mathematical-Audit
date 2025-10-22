@@ -1,0 +1,90 @@
+SSM-Audit — Calibration Appendix (ASCII)
+
+Canonicals
+  phi((m,a)) = m
+  a := clamp(a, -1+eps_a, +1-eps_a)
+  a_out := tanh( (SUM w*atanh(a)) / max(SUM w, eps_w) )
+  a_sdi := tanh( (SUM atanh(a_i)) / n )
+
+Goal
+  Choose stable, comparable knobs that minimize false churn while keeping lanes sensitive to real change.
+  m is never changed by construction; we only score/aggregate via a.
+
+Primary knobs and safe defaults
+  eps_a     = 1e-6      ; clamp margin for a
+  eps_w     = 1e-12     ; denominator floor in rapidity fusion
+  promote   = +0.05     ; hysteresis: require >= +0.05 jump in a to upgrade band
+  demote    = -0.05     ; hysteresis: require <= -0.05 drop in a to downgrade band
+  slope_7d  = -0.02     ; alert if 7-day average slope <= -0.02 (degrade)
+  gamma     = 1.0       ; optional mapper scale (leave at 1.0 unless a specific mapper needs tuning)
+
+Band thresholds (fixed)
+  A++: a>=0.75 ; A+: a>=0.50 ; A0: a>=0.25 ; A-: a>=0.10 ; else A--
+
+Hysteresis rule (per KPI)
+  next band := 
+    if upgrade and `delta_a >= +promote`  → adopt higher band
+    if downgrade and `delta_a <= demote`  → adopt lower band
+    else                                  → keep prior band
+  where `delta_a := a_now - a_prev`.
+
+Mapper recipes (when compute_a is on)
+  coverage  : `a := 2*q - 1`
+  agreement : `a := tanh( 1 - |m1 - m2| / b )`
+  residual  : `a := tanh( k*( 1 - |actual - forecast| / s ) )`
+  Notes: keep `b>0`, `s>0`; adjust `k` only if you need sharper/softer tails.
+
+Calibration procedure (10–20 minutes)
+  1) Seed + window: pick a contiguous window (e.g., 30–90 days) that contains at least one known improvement and one known setback.
+  2) Start with defaults: `eps_a=1e-6`, `promote=+0.05`, `demote=-0.05`, `slope_7d=-0.02`.
+  3) Sensitivity sweep:
+     - If bands feel too “sticky”, try `promote=+0.04`, `demote=-0.04`.
+     - If too jittery, try `promote=+0.06`, `demote=-0.06`.
+     Accept the smallest pair that suppresses obvious noise but still captures the known events.
+  4) Mapper checks (if compute_a=on):
+     - coverage: verify reasonable q→a mapping (e.g., q=0.90 → a=0.80).
+     - agreement: choose b near the 75–90th percentile of `|m1-m2|` in calm periods.
+     - residual: choose s near 1.5–2.0× MAD or std of residuals; keep `k≈1.0–1.3`.
+  5) Fusion sanity:
+     - Duplicate a row and shuffle order; verify `a_out` is unchanged (`a_out` is order-invariant).
+     - Zero/low weights: ensure they do not distort `a_out` because of `eps_w`.
+  6) SDI scope:
+     - If mixing dissimilar KPIs, set the filter to a coherent subset (e.g., revenue lanes only) via `--sdi_kpis`.
+     - Confirm SDI monotonicity: if all constituent a’s rise together, SDI should rise.
+  7) Alerts:
+     - Check at least one true negative and one true positive for `slope_7d`.
+     - If too many false alerts, relax to `slope_7d=-0.03`; if too quiet, tighten to `-0.015`.
+
+Comparability (multi-entity / multi-region)
+  • Keep the same `promote/demote`, `eps_a`, band thresholds across all peers to avoid “hysteresis bias”.
+  • Publish the knobs fingerprint per run: `knobs_hash := sha256(canonical_json(knobs))`.
+  • If regional volatility differs materially, tune mappers (e.g., s in residual) but DO NOT change band thresholds.
+
+Acceptance checklist (signoff before pilots)
+  [ ] `phi((m,a)) = m` confirmed (m unchanged end-to-end)
+  [ ] Bands reproduce on rerun (idempotent; no SDI duplication)
+  [ ] Known events reflected with intended lead/lag under chosen hysteresis
+  [ ] SDI directionally consistent with constituents
+  [ ] `knobs_hash` recorded alongside outputs and shared with reviewers
+  [ ] README/Getting Started handed to operators
+
+Common pitfalls and fixes
+  • Overreactive bands: increase hysteresis magnitude (e.g., `promote=+0.06`, `demote=-0.06`).
+  • Underreactive bands: decrease hysteresis (e.g., `+0.04` / `-0.04`) or revisit mapper scale (`k`, `s`, `b`).
+  • Skewed SDI due to KPI mix: restrict with `--sdi_kpis` to a stable subset.
+  • Missing a values in CSV: use `--compute_a auto` with mapper columns present.
+
+Quick commands (Windows CMD)
+  Demo quickcheck:
+    `scripts\run_demo.cmd`
+  CSV pilot (native SDI):
+    `scripts\run_csv.cmd`
+  Team run with SDI subset:
+    `scripts\run_team.cmd CFO_Q4 "Revenue_actual,AR_collected_issued" AR_collected_issued`
+  Verify SDI rows present:
+    `find /c ",SDI," mini_calc_output.csv`
+
+Ethics & usage
+  • Observation-only: derived a/bands/SDI support review; they do not replace judgment.
+  • Keep knob choices stable over time; document changes via `knobs_hash`.
+  • Prefer anonymized/public data when sharing externally.

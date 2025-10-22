@@ -1,0 +1,76 @@
+SSM-Audit — Getting Started (ASCII)
+
+Canonicals
+phi((m,a)) = m
+a := clamp(a, -1+eps_a, +1-eps_a)
+a_out := tanh( (SUM w*atanh(a)) / max(SUM w, eps_w) )
+a_sdi := tanh( (SUM atanh(a_i)) / n )
+
+What this tool does
+Observation-only lanes/bands beside your classical m. Values of m are never changed by construction (phi((m,a)) = m).
+
+Prerequisites (Windows CMD)
+• Python 3.8+ in PATH
+• matplotlib (optional) → enables plots
+
+Folder quick tour
+• ssm_audit_mini_calc.py ← CLI calculator with native SDI
+• scripts\run_csv.cmd ← CSV pipeline + native SDI
+
+CSV schema (outputs)
+time,kpi,m,a,band,band_hyst,knobs_hash,build_id,stamp
+a is bounded in (-1,+1); band thresholds: A++: a>=0.75; A+: a>=0.50; A0: a>=0.25; A-: a>=0.10; else A--
+knobs_hash := sha256(canonical_json(knobs))
+
+Run a DEMO (no CSV) — direct Python
+Open CMD at repo root and run:
+python ssm_audit_mini_calc.py --demo --sdi --sdi_plot --alerts_csv alerts.csv --plot_tag DEMO
+Outputs: mini_calc_output.csv, optional alerts.csv, plots under Plots\ (<kpi>_DEMO.png, SDI.png).
+
+Run on a CSV (pilot default) — via script
+Prepare your pilot CSV (see “Mapper recipes” below if you want the tool to compute a). Then run:
+scripts\run_csv.cmd pilot.csv out.csv CFO_Q4 Revenue_actual -0.02 +0.05 -0.05 Plots
+This writes out.csv, optional alerts.csv, <Plots>\Revenue_actual_CSV.png, and SDI.png.
+
+Run on a CSV — direct Python equivalent
+python ssm_audit_mini_calc.py pilot.csv out.csv --build_id CFO_Q4 --plot_kpi Revenue_actual --alerts_csv alerts.csv --sdi --sdi_plot --plot_tag CSV --compute_a auto
+
+Key knobs (defaults)
+eps_a=1e-6, eps_w=1e-12, promote=+0.05, demote=-0.05, slope_7d=-0.02
+
+Hysteresis
+promote if delta_a >= +promote
+demote if delta_a <= demote
+Alerts include degrade_2of3 and slope_7d.
+
+Mapper recipes (used when --compute_a on/auto and you provide a mapper column)
+• coverage: a := 2*q - 1 (requires column: q)
+• agreement: a := tanh( 1 - |m1 - m2| / b ) (requires columns: m1,m2,b with b>0)
+• residual: a := tanh( k*( 1 - |actual - forecast| / s ) ) (requires columns: actual,forecast,s with s>0; optional k, default 1.0)
+
+SDI (portfolio index)
+a_sdi := tanh( (SUM atanh(a_i)) / n )
+Order-invariant, bounded, collapse parity preserved.
+Use --sdi_kpis to restrict KPIs included in SDI.
+
+Plotting notes (optional)
+KPI images auto-name as <kpi>_DEMO.png (demo) or <kpi>_CSV.png (CSV).
+Use --plot_tag <suffix> to add a suffix, and --plot_keep_plain to also write <kpi>.png.
+SDI plot writes SDI.png.
+
+Ethics & usage
+Observation-only; derived lanes assist review, not replace it.
+Keep mapping knobs stable across peers/periods for comparability.
+Prefer anonymized or public cases for external sharing.
+
+FAQ
+Q: Why does m never change?
+A: phi((m,a)) = m by design—SSM lanes add signal beside m.
+
+Q: Why does SDI look “conservative”?
+A: Rapidities average (atanh/tanh) keeps extremes bounded; no single KPI dominates.
+
+Q: Why don’t re-runs duplicate SDI rows?
+A: Native SDI does a purge-then-append of kpi="SDI" rows.
+
+End.
