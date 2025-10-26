@@ -2,6 +2,8 @@
 
 ![GitHub Release](https://img.shields.io/github/v/release/OMPSHUNYAYA/Symbolic-Mathematical-Audit?style=flat&logo=github) ![GitHub Stars](https://img.shields.io/github/stars/OMPSHUNYAYA/Symbolic-Mathematical-Audit?style=flat&logo=github) ![License](https://img.shields.io/badge/license-CC%20BY--NC%204.0-blue?style=flat&logo=creative-commons)
 
+**Browser build (v1.4):** Get the offline mini calculator ZIP in **Releases → SSM-Audit Mini Calculator — Browser (v1.4)** for the Shunyaya Symbolic Mathematical Audit (SSM-Audit).
+
 ## Intro
 
 SSM-Audit adds a stability lane beside the KPIs you already trust so leaders can see drift early without changing the numbers. 
@@ -35,6 +37,9 @@ Defaults: `eps_a=1e-6`, `eps_w=1e-12`, `promote=+0.05`, `demote=-0.05`, `slope_7
 
 ## Attachments (Preview • Download)
 
+- **Browser mini calculator v1.4 (ZIP)**: [Get it in Releases → SSM-Audit Mini Calculator — Browser (v1.4)](../../releases/tag/v1.4-browser)
+  - Contents: `SSM-Audit_Mini_Calculator_v1.4_browser.html` (offline, single-file), `pilot.csv`, `README_browser_v1.4.txt`
+  - Integrity (SHA-256): `2231bf11a14a804683675256c30f048db47d91c86bfc1661aaa2a9a753bf2e31`
 - **Public README Note (TXT):** [Preview](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/blob/main/README_Public.txt) • [Download](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/raw/main/README_Public.txt)
 
 - **Getting Started (TXT):** [Preview](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/blob/main/GETTING_STARTED.txt) • [Download](https://github.com/OMPSHUNYAYA/Symbolic-Mathematical-Audit/raw/main/GETTING_STARTED.txt)
